@@ -1,8 +1,11 @@
 package com.example.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +15,7 @@ import java.util.concurrent.TimeUnit;
  * @author LiaoHang
  * @date 2022-06-09 22:15
  */
+@Slf4j
 @Component
 public class RedisUtil {
     @Resource
@@ -514,5 +518,24 @@ public class RedisUtil {
      */
     public double hdecr(String key, String item, double by) {
         return redisTemplate.opsForHash().increment(key, item, -by);
+    }
+
+
+    /**
+     * 向通道发布消息
+     */
+    public boolean convertAndSend(String channel, Object message) {
+        if (!StringUtils.hasText(channel)) {
+            return false;
+        }
+        try {
+            redisTemplate.convertAndSend(channel, message);
+            log.info("发送消息成功，channel：{}，message：{}", channel, message);
+            return true;
+        } catch (Exception e) {
+            log.info("发送消息失败，channel：{}，message：{}", channel, message);
+            e.printStackTrace();
+        }
+        return false;
     }
 }
